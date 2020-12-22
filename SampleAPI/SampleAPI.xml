@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SampleAPI</name>
+    </assembly>
+    <members>
+        <member name="M:SampleAPI.Controllers.PrimesController.Factors(System.Int32)">
+            <summary>
+            Returns prime factors for a given number
+            </summary>
+            <param name="n"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
