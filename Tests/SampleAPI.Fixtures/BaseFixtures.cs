@@ -1,18 +1,49 @@
 using System.Net.Http;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 
 namespace SampleAPI.Fixtures
 {
-    public class CustomWebApplicationFactory<TStartup>
+    public class AuthorizedCustomWebApplicationFactory<TStartup>
         : WebApplicationFactory<TStartup> where TStartup : class
     {
+        private class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+        {
+            public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+                ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+                : base(options, logger, encoder, clock)
+            {
+            }
+
+            protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+            {
+                var identity = new ClaimsIdentity(new[] { new Claim("scope", "SampleAPI") }, "Test");
+                var principal = new ClaimsPrincipal(identity);
+                var ticket = new AuthenticationTicket(principal, "Test");
+
+                var result = AuthenticateResult.Success(ticket);
+
+                return Task.FromResult(result);
+            }
+        }
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.ConfigureServices(services => { });
+            builder.ConfigureServices(services =>
+            {
+                services.AddAuthentication(options => { options.DefaultAuthenticateScheme = nameof(TestAuthHandler); })
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(nameof(TestAuthHandler), options => { });
+            });
         }
     }
 
@@ -24,7 +55,7 @@ namespace SampleAPI.Fixtures
         [ClassInitialize]
         public static void Initialize(TestContext testContext)
         {
-            var webApplicationFactory = new CustomWebApplicationFactory<Startup>();
+            var webApplicationFactory = new AuthorizedCustomWebApplicationFactory<Startup>();
             httpclient = webApplicationFactory.CreateClient();
         }
 
@@ -52,6 +83,33 @@ namespace SampleAPI.Fixtures
             var responseObject = await httpclient.GetAsync("primes/factors/-3");
 
             Assert.AreEqual(System.Net.HttpStatusCode.BadRequest, responseObject.StatusCode);
+        }
+    }
+
+    [TestClass]
+    public class AuthorizationFixtures
+    {
+        private class UnauthorizedCustomWebApplicationFactory<TStartup>
+            : WebApplicationFactory<TStartup> where TStartup : class
+        {
+        }
+
+        public static HttpClient httpclient;
+
+        [ClassInitialize]
+        public static void Initialize(TestContext testContext)
+        {
+            var webApplicationFactory = new UnauthorizedCustomWebApplicationFactory<Startup>();
+            httpclient = webApplicationFactory.CreateClient();
+        }
+
+
+        [TestMethod]
+        public async Task TestPrimesControllerFactorsActionReturnsUnauthorized()
+        {
+            var responseObject = await httpclient.GetAsync("primes/factors/42");
+
+            Assert.AreEqual(System.Net.HttpStatusCode.Unauthorized, responseObject.StatusCode);
         }
     }
 }
