@@ -1,0 +1,15 @@
+﻿@page "{number}"
+@model MyApp.Namespace.PrimesModel
+@{
+    <table class="table col-3 text-center">
+        <thead>
+            <tr><th>Prime factors of @Model.Number</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var factor in Model.Factors ?? Array.Empty<int>())
+            {
+                <tr><td>@factor</td></tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,9 @@
+﻿@page
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+@functions {
+    public IActionResult OnGet()
+    {
+        return SignOut(CookieAuthenticationDefaults.AuthenticationScheme, "oidc");
+    }
+}
