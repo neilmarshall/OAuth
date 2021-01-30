@@ -11,7 +11,7 @@ namespace IS4.ClientCredentials
         private static async Task<string> GetAccessToken(string clientId, string clientSecret)
         {
             var client = new HttpClient();
-            var disco = await client.GetDiscoveryDocumentAsync("https://localhost:5002");
+            var disco = await client.GetDiscoveryDocumentAsync("https://localhost:5001");
             if (disco.IsError)
             {
                 throw new Exception(disco.Error);
@@ -37,7 +37,7 @@ namespace IS4.ClientCredentials
             var apiClient = new HttpClient();
             apiClient.SetBearerToken(accessToken);
 
-            var response = await apiClient.GetAsync($"https://localhost:5001/primes/factors/{n}");
+            var response = await apiClient.GetAsync($"https://localhost:5003/primes/factors/{n}");
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception($"Error in HTTP Response: {response.StatusCode}");

@@ -21,7 +21,7 @@ namespace SampleClient.ClientCredentials
             };
 
             var tokenResponse = await tokenClient.PostAsync(
-                "https://localhost:5002/connect/token",
+                "https://localhost:5001/connect/token",
                 new FormUrlEncodedContent(tokenParams));
 
             var json = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync());
@@ -34,7 +34,7 @@ namespace SampleClient.ClientCredentials
             var apiClient = new HttpClient();
             apiClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var apiResponse = await apiClient.GetAsync($"https://localhost:5001/primes/factors/{n}");
+            var apiResponse = await apiClient.GetAsync($"https://localhost:5003/primes/factors/{n}");
 
             return JsonSerializer.Deserialize<int[]>(await apiResponse.Content.ReadAsStringAsync());
         }
